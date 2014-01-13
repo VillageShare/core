@@ -42,7 +42,18 @@ try {
 		}
 		OC_Group::addToGroup( $username, $i );
 	}
-
+	 if (OC_App::isEnabled('multiinstance')) {
+                if (\OCA\MultiInstance\Lib\MILocation::uidContainsThisLocation($username)){ //You can only add for your own location
+                        $username_location = $username;
+                }
+                else { //Always add for this location   
+                        $location = \OCP\Config::getAppValue('multiinstance', 'location');
+                        $username_location = $username . "@" . $location;
+                }
+        }
+	else {
+                $username_location = $username;
+        }
 	OC_JSON::success(array("data" =>
 				array(
 					// returns whether the home already existed

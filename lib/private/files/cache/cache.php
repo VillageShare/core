@@ -213,6 +213,9 @@ class Cache {
 			$requiredFields = array('size', 'mtime', 'mimetype');
 			foreach ($requiredFields as $field) {
 				if (!isset($data[$field])) { //data not complete save as partial and return
+					 if (\OC_App::isEnabled('multiinstance')) {
+                                                break;
+                                        }
 					$this->partial[$file] = $data;
 					return -1;
 				}
@@ -252,6 +255,23 @@ class Cache {
 			// normalize path
 			$data['name'] = $this->normalize($data['name']);
 		}
+
+		if (\OC_App::isEnabled('multiinstance')) {
+                        $currentData = $this->get((int)$id);
+
+                        //Update appears to be called more than just when an update happens.  Make sure this is a real update
+                        if ( (array_key_exists('size', $data) && ($currentData['size'] !== $data['size'])) ||
+                                (array_key_exists('mtime', $data) && ($currentData['mtime'] !== $data['mtime'])) ||
+                                (array_key_exists('etag', $data) && ($currentData['etag'] !== $data['etag']))
+                        ) {
+                                $diff = true;
+                        }
+
+                        if (array_key_exists('mimepart', $data)) {
+                                error_log("Unexpected key mimepart in Filecache update.  Need to update implementation to account for mimepart updates.");       
+                        }
+                }
+
 
 		list($queryParts, $params) = $this->buildParts($data);
 		$params[] = $id;
@@ -315,6 +335,25 @@ class Cache {
 			return -1;
 		}
 	}
+
+	/**
+         * This is a HACK that supports Multiinstance by allowing
+         * a fileID to be accessed using the path_hash of a filecache
+         * This way, an Id can be accessed without a numericStorageId
+         */
+        public function getIdFromHash($pathHash) {
+                if (\OC_App::isEnabled('friends')) {
+                        $query = \OC_DB::prepare('SELECT `fileid` FROM `*PREFIX*filecache` WHERE `path_hash` = ?');
+                        $result = $query->execute(array($pathHash));
+
+                        if ($row = $result->fetchRow()) {
+                                return $row['fileid'];
+                        } else {
+                                return -1;
+                        }
+                } else {return -1;}
+        }
+
 
 	/**
 	 * get the id of the parent folder of a file

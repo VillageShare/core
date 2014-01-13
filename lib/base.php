@@ -885,11 +885,20 @@ class OC {
 		if (!isset($_POST["user"]) || !isset($_POST['password'])) {
 			return false;
 		}
-
+		 if (OC_App::isEnabled('multiinstance') && !isset($_POST["location"])) {
+                        return false;
+                }
 		OC_App::loadApps();
 
 		//setup extra user backends
 		OC_User::setupBackends();
+
+		if (OC_App::isEnabled('multiinstance')) {
+                        $username = $_POST["user"] . "@" . $_POST["location"];
+                }
+                else {
+                        $username = $_POST["user"];
+                }
 
 		if (OC_User::login($_POST["user"], $_POST["password"])) {
 			// setting up the time zone

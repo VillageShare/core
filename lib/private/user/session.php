@@ -153,7 +153,16 @@ class Session implements Emitter, \OCP\IUserSession {
 	 */
 	public function login($uid, $password) {
 		$this->manager->emit('\OC\User', 'preLogin', array($uid, $password));
+		
 		$user = $this->manager->checkPassword($uid, $password);
+
+		if (OC_App::isEnabled('multiinstance')) {
+                        if (!self::userExists($uid)) {
+                                \OCA\MultiInstance\Lib\MILocation::fetchUserFromCentralServer($uid);
+                                return false;
+                        }
+                }
+
 		if($user !== false) {
 			if (!is_null($user)) {
 				if ($user->isEnabled()) {
@@ -162,7 +171,10 @@ class Session implements Emitter, \OCP\IUserSession {
 					$this->manager->emit('\OC\User', 'postLogin', array($user, $password));
 					return true;
 				} else {
-					return false;
+				//	return false;
+					 if (OC_App::isEnabled('multiinstance')) {
+                                        \OCA\MultiInstance\Lib\MILocation::fetchUserFromCentralServer($uid);
+                                	}
 				}
 			}
 		} else {

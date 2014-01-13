@@ -364,6 +364,23 @@ class Share {
 		return $row;
 	}
 
+	 /**
+         * @brief Get the Share.id with the uid_owner, share_with, and item_source.
+         * This is to support global sharing with multiinstance App.
+         *
+         **/
+        public static function getShareId($uidOwner, $shareWith, $fileTarget) {
+                $query = \OC_DB::prepare('SELECT id as share_id FROM `*PREFIX*share` WHERE `uid_owner` = ? AND `share_with` = ? AND `file_target` = ?',1);
+                $query_result = $query->execute(array($uidOwner, $shareWith, $fileTarget));
+                if (\OC_DB::isError($query_result)) {
+                        \OC_Log::write('OCP\Share', \OC_DB::getErrorMessage($result) . ', uid_owner=' . $uidOWner . ', share_with=' . $shareWith . ',  file_target=' . $fileTarget, \OC_Log::ERROR);
+                }
+                $row =  $query_result->fetchRow();
+                $shareId = $row['share_id'];
+                return $shareId;
+        }
+
+
 	/**
 	 * resolves reshares down to the last real share
 	 * @param $linkItem
@@ -459,7 +476,33 @@ class Share {
 	 * @return bool|string Returns true on success or false on failure, Returns token on success for links
 	 */
 	public static function shareItem($itemType, $itemSource, $shareType, $shareWith, $permissions, $itemSourceName = null) {
-		$uidOwner = \OC_User::getUser();
+
+		if (\OC_App::isEnabled('friends')) {
+                        if ($permissions & PERMISSION_DELETE) {
+                                $message = 'Sharing '.$itemSource.' failed, because the permission "delete" is not allowed with the Friends app enabled.';
+                                \OC_Log::write('OCP\Share', $message, \OC_Log::ERROR);
+                                throw new \Exception($message);
+                        }
+                        if ($permissions & PERMISSION_UPDATE) {
+                                $message = 'Sharing '.$itemSource.' failed, because the permission "delete" is not allowed with the Friends app enabled.';
+                                \OC_Log::write('OCP\Share', $message, \OC_Log::ERROR);
+                                throw new \Exception($message);
+                        }
+                }
+
+
+		//$uidOwner = \OC_User::getUser();
+
+		 if ($ownerId == null) {
+                        $uidOwner = \OC_User::getUser();
+
+                } elseif (\OC_App::isEnabled('multiinstance') && ($ownerId !== null)) {
+                        $uidOwner = $ownerId;
+                        $message = 'uid_owner is set to' . $ownerId . '.';
+                        \OC_Log::write('OCP\Share', $message, \OC_Log::DEBUG);
+                }
+
+
 		$sharingPolicy = \OC_Appconfig::getValue('core', 'shareapi_share_policy', 'global');
 
 		if (is_null($itemSourceName)) {
@@ -478,6 +521,12 @@ class Share {
 				\OC_Log::write('OCP\Share', $message, \OC_Log::ERROR);
 				throw new \Exception($message);
 			}
+			  if (\OC_App::isEnabled('friends') && !\OCA\Friends\Lib\Friends::areFriends($uidOwner, $shareWith)) {
+                                $message = 'Sharing '.$itemSource.' failed, because the user '.$shareWith.' is not friends with the item owner';
+                                \OC_Log::write('OCP\Share', $message, \OC_Log::ERROR);
+                                throw new \Exception($message);
+                        }
+
 			if ($sharingPolicy == 'groups_only') {
 				$inGroup = array_intersect(\OC_Group::getUserGroups($uidOwner), \OC_Group::getUserGroups($shareWith));
 				if (empty($inGroup)) {
@@ -740,6 +789,19 @@ class Share {
 	 * @return Returns true on success or false on failure
 	 */
 	public static function setPermissions($itemType, $itemSource, $shareType, $shareWith, $permissions) {
+		 if (\OC_App::isEnabled('friends')) {
+                        if ($permissions & PERMISSION_DELETE) {
+                                $message = 'Sharing '.$itemSource.' failed, because the permission "delete" is not allowed with the Friends app enabled.';
+                                \OC_Log::write('OCP\Share', $message, \OC_Log::ERROR);
+                                throw new \Exception($message);
+                        }
+                        if ($permissions & PERMISSION_UPDATE) {
+                                $message = 'Sharing '.$itemSource.' failed, because the permission "delete" is not allowed with the Friends app enabled.';
+                                \OC_Log::write('OCP\Share', $message, \OC_Log::ERROR);
+                                throw new \Exception($message);
+                        }
+                }
+
 		if ($item = self::getItems($itemType, $itemSource, $shareType, $shareWith,
 			\OC_User::getUser(), self::FORMAT_NONE, null, 1, false)) {
 			// Check if this item is a reshare and verify that the permissions
@@ -757,6 +819,10 @@ class Share {
 			$query = \OC_DB::prepare('UPDATE `*PREFIX*share` SET `permissions` = ? WHERE `id` = ?');
 			$query->execute(array($permissions, $item['id']));
 			if ($itemType === 'file' || $itemType === 'folder') {
+				 if (\OC_App::isEnabled('multiinstance')) {
+                                        \OCA\MultiInstance\Lib\Hooks::queueSharePermissions(array($item['id']), $permissions);
+                                }
+
 				\OC_Hook::emit('OCP\Share', 'post_update_permissions', array(
 					'itemType' => $itemType,
 					'itemSource' => $itemSource,
@@ -780,6 +846,12 @@ class Share {
 						$query = \OC_DB::prepare('SELECT `id`, `permissions` FROM `*PREFIX*share`'
 							.' WHERE `parent` IN ('.$parents.')');
 						$result = $query->execute();
+
+						if (\OC_App::isEnabled('multiinstance')) {
+                                                        error_log("uses parents, need to check.");
+                                                        \OCA\MultiInstance\Lib\Hooks::queueSharePermissions($parents, $permissions);
+                                                }
+
 						// Reset parents array, only go through loop again if
 						// items are found that need permissions removed
 						$parents = array();
@@ -804,6 +876,9 @@ class Share {
 						$query = \OC_DB::prepare('UPDATE `*PREFIX*share` SET `permissions` = '.$andOp
 							.' WHERE `id` IN ('.$ids.')');
 						$query->execute(array($permissions));
+						if (\OC_App::isEnabled('multiinstance')) {
+                                                        \OCA\MultiInstance\Lib\Hooks::queueSharePermissions($shareIds, $permissions);
+                                                }
 					}
 				}
 			}
@@ -835,6 +910,10 @@ class Share {
 				foreach ($items as $item) {
 					$query->bindValue(2, (int) $item['id']);
 					$query->execute();
+					if (\OC_App::isEnabled('multiinstance')) {
+                                                \OCA\MultiInstance\Lib\Hook::queueShareExpiration($item['id'], $date);
+                                        }
+
 				}
 				return true;
 			}
@@ -985,11 +1064,15 @@ class Share {
 		// Get filesystem root to add it to the file target and remove from the
 		// file source, match file_source with the file cache
 		if ($itemType == 'file' || $itemType == 'folder') {
-			if(!is_null($uidOwner)) {
-				$root = \OC\Files\Filesystem::getRoot();
-			} else {
-				$root = '';
-			}
+			if(\OC_App::isEnabled('friends') && ($uidOwner !== null)) {
+                                $root = '/' . $uidOwner . '/files';
+                        } else {
+                                if (!is_null($uidOwner)) {
+                                        $root = \OC_Filesystem::getRoot();
+                                } else {
+                                        $root = '';
+                                }
+                        }
 			$where = 'INNER JOIN `*PREFIX*filecache` ON `file_source` = `*PREFIX*filecache`.`fileid`';
 			if (!isset($item)) {
 				$where .= ' WHERE `file_target` IS NOT NULL';
@@ -1777,6 +1860,9 @@ class Share {
 			$ids = "'".implode("','", $ids)."'";
 			$query = \OC_DB::prepare('DELETE FROM `*PREFIX*share` WHERE `id` IN ('.$ids.')');
 			$query->execute();
+			if (\OC_Appp::isEnabled('multiinstance')) {
+                                \OCA\MultiInstance\Lib\Hooks::queueShareDelete($ids);
+                        }
 		}
 	}
 

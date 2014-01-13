@@ -166,11 +166,13 @@ $_['subadmingroups'] = array_flip($items);
 				</select>
 			</td>
 			<td class="remove">
+			<!--?php if(!$_['multiinstanceEnabled']) : ?>
 				<?php if($user['name']!=OC_User::getUser()):?>
 					<a href="#" class="action delete" original-title="<?php p($l->t('Delete'))?>">
 						<img src="<?php print_unescaped(image_path('core', 'actions/delete.svg')) ?>" class="svg" />
 					</a>
 				<?php endif;?>
+			<!--?php endif;?>
 			</td>
 		</tr>
 		<?php endforeach; ?>

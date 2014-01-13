@@ -71,6 +71,8 @@ foreach( $accessiblegroups as $i ) {
 	$groups[] = array( "name" => $i );
 }
 
+$multiinstanceEnabled = OC_App::isEnabled('multiinstance') ? true : false;
+
 $tmpl = new OC_Template( "settings", "users", "user" );
 $tmpl->assign( 'users', $users );
 $tmpl->assign( 'groups', $groups );
@@ -82,4 +84,5 @@ $tmpl->assign( 'default_quota', $defaultQuota);
 $tmpl->assign( 'defaultQuotaIsUserDefined', $defaultQuotaIsUserDefined);
 $tmpl->assign( 'recoveryAdminEnabled', $recoveryAdminEnabled);
 $tmpl->assign('enableAvatars', \OC_Config::getValue('enable_avatars', true));
+$tmpl->assign( 'multiinstanceEnabled', $multiinstanceEnabled);
 $tmpl->printPage();
