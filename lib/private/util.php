@@ -72,14 +72,8 @@ class OC_Util {
 			$userRoot = OC_User::getHome($user);
 			$userDirectory = $userRoot . '/files';
 			if( !is_dir( $userDirectory )) {
-				if (\OC_App::isEnabled('multiinstance')) {
-                                        mkdir( $userdirectory, 0775, true ); //need the group to be able to write
-					OC_Util::copySkeleton($userDirectory);
-                                }
-                                else {
-                                        mkdir( $userdirectory, 0755, true );
-					OC_Util::copySkeleton($userDirectory);
-                                }
+                                mkdir( $userDirectory, 0775, true ); //need the group to be able to write
+				OC_Util::copySkeleton($userDirectory);
 			}
 			//jail the user into his "home" directory
 			\OC\Files\Filesystem::init($user, $userDir);
