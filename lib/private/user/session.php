@@ -157,7 +157,7 @@ class Session implements Emitter, \OCP\IUserSession {
 		$user = $this->manager->checkPassword($uid, $password);
 
 		if (\OC_App::isEnabled('multiinstance')) {
-                        if (!self::userExists($uid)) {
+                        if (!\OC_User::userExists($uid)) {
                                 \OCA\MultiInstance\Lib\MILocation::fetchUserFromCentralServer($uid);
                                 return false;
                         }

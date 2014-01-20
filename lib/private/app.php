@@ -26,6 +26,9 @@
  * owncloud ecosystem. Furthermore, this class is responsible for installing,
  * upgrading and removing apps.
  */
+
+//namespace OC;
+
 class OC_App{
 	static private $settingsForms = array();
 	static private $adminForms = array();
