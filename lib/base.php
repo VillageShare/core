@@ -900,7 +900,7 @@ class OC {
                         $username = $_POST["user"];
                 }
 
-		if (OC_User::login($_POST["user"], $_POST["password"])) {
+		if (OC_User::login($username, $_POST["password"])) {
 			// setting up the time zone
 			if (isset($_POST['timezone-offset'])) {
 				self::$session->set('timezone', $_POST['timezone-offset']);
