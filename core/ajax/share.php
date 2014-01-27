@@ -30,6 +30,11 @@ if (isset($_POST['action']) && isset($_POST['itemType']) && isset($_POST['itemSo
 		case 'share':
 			if (isset($_POST['shareType']) && isset($_POST['shareWith']) && isset($_POST['permissions'])) {
 				try {
+					if(OC_App::isEnabled('multiinstance')) {
+ 					        $permissions= 1;#OCP\Share::PERMISSION_READ;
+					} else {
+        					$permissions = $_POST['permissions'];
+					}
 					$shareType = (int)$_POST['shareType'];
 					$shareWith = $_POST['shareWith'];
 					if ($shareType === OCP\Share::SHARE_TYPE_LINK && $shareWith == '') {
@@ -41,7 +46,7 @@ if (isset($_POST['action']) && isset($_POST['itemType']) && isset($_POST['itemSo
 						$_POST['itemSource'],
 						$shareType,
 						$shareWith,
-						$_POST['permissions'],
+						$permissions,
 						$_POST['itemSourceName']
 					);
 

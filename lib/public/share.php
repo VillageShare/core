@@ -479,12 +479,12 @@ class Share {
 
 		if (\OC_App::isEnabled('friends')) {
                         if ($permissions & PERMISSION_DELETE) {
-                                $message = 'Sharing '.$itemSource.' failed, because the permission "delete" is not allowed with the Friends app enabled.';
+                                $message = 'Sharing '.$itemSource.' failed, because the permission "delete" is not allowed with the Friends app enabled. Permissions are '.$permissions;
                                 \OC_Log::write('OCP\Share', $message, \OC_Log::ERROR);
                                 throw new \Exception($message);
                         }
                         if ($permissions & PERMISSION_UPDATE) {
-                                $message = 'Sharing '.$itemSource.' failed, because the permission "delete" is not allowed with the Friends app enabled.';
+                                $message = 'Sharing '.$itemSource.' failed, because the permission "update" is not allowed with the Friends app enabled. Permissions are '.$permissions;
                                 \OC_Log::write('OCP\Share', $message, \OC_Log::ERROR);
                                 throw new \Exception($message);
                         }
