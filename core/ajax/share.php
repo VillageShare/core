@@ -124,8 +124,12 @@ if (isset($_POST['action']) && isset($_POST['itemType']) && isset($_POST['itemSo
 					$subject = (string)$l->t('%s shared »%s« with you', array($ownerDisplayName, $filename));
 					$expiration = null;
 					if (isset($items[0]['expiration'])) {
-						$date = new DateTime($items[0]['expiration']);
-						$expiration = $date->format('Y-m-d');
+						try {
+							$date = new DateTime($items[0]['expiration']);
+							$expiration = $l->l('date', $date->getTimestamp());
+						} catch (Exception $e) {
+							\OCP\Util::writeLog('sharing', "Couldn't read date: " . $e->getMessage(), \OCP\Util::ERROR);
+						}
 					}
 
 					if ($itemType === 'folder') {
@@ -188,6 +192,8 @@ if (isset($_POST['action']) && isset($_POST['itemType']) && isset($_POST['itemSo
 			break;
 
 		case 'email':
+			// enable l10n support
+			$l = OC_L10N::get('core');
 			// read post variables
 			$user = OCP\USER::getUser();
 			$displayName = OCP\User::getDisplayName();
@@ -196,8 +202,16 @@ if (isset($_POST['action']) && isset($_POST['itemType']) && isset($_POST['itemSo
 			$file = $_POST['file'];
 			$to_address = $_POST['toaddress'];
 
-			// enable l10n support
-			$l = OC_L10N::get('core');
+			$expiration = null;
+			if (isset($_POST['expiration']) && $_POST['expiration'] !== '') {
+				try {
+					$date = new DateTime($_POST['expiration']);
+					$expiration = $l->l('date', $date->getTimestamp());
+				} catch (Exception $e) {
+					\OCP\Util::writeLog('sharing', "Couldn't read date: " . $e->getMessage(), \OCP\Util::ERROR);
+				}
+
+			}
 
 			// setup the email
 			$subject = (string)$l->t('%s shared »%s« with you', array($displayName, $file));
@@ -207,6 +221,7 @@ if (isset($_POST['action']) && isset($_POST['itemType']) && isset($_POST['itemSo
 			$content->assign ('type', $type);
 			$content->assign ('user_displayname', $displayName);
 			$content->assign ('filename', $file);
+			$content->assign('expiration', $expiration);
 			$text = $content->fetchPage();
 
 			$content = new OC_Template("core", "altmail", "");
@@ -214,6 +229,7 @@ if (isset($_POST['action']) && isset($_POST['itemType']) && isset($_POST['itemSo
 			$content->assign ('type', $type);
 			$content->assign ('user_displayname', $displayName);
 			$content->assign ('filename', $file);
+			$content->assign('expiration', $expiration);
 			$alttext = $content->fetchPage();
 
 			$default_from = OCP\Util::getDefaultEmailAddress('sharing-noreply');
