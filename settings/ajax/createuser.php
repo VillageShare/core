@@ -29,8 +29,20 @@ $password = $_POST["password"];
 // Return Success story
 try {
 	// check whether the user's files home exists
+	if (OC_App::isEnabled('multiinstance')) {
+                if (\OCA\MultiInstance\Lib\MILocation::uidContainsThisLocation($username)){ //You can only add for your own location
+                        $username_location = $username;
+                }
+                else { //Always add for this location   
+                        $location = \OCP\Config::getAppValue('multiinstance', 'location');
+                        $username_location = $username . "@" . $location;
+                }
+        } else {
+                $username_location = $username;
+        }
+	$username = $username_location;
+
 	$userDirectory = OC_User::getHome($username) . '/files/';
-	$homeExists = file_exists($userDirectory);
 
 	if (!OC_User::createUser($username, $password)) {
 		OC_JSON::error(array('data' => array( 'message' => 'User creation failed for '.$username )));
@@ -42,24 +54,18 @@ try {
 		}
 		OC_Group::addToGroup( $username, $i );
 	}
-	 if (OC_App::isEnabled('multiinstance')) {
-                if (\OCA\MultiInstance\Lib\MILocation::uidContainsThisLocation($username)){ //You can only add for your own location
-                        $username_location = $username;
-                }
-                else { //Always add for this location   
-                        $location = \OCP\Config::getAppValue('multiinstance', 'location');
-                        $username_location = $username . "@" . $location;
-                }
-        }
-	else {
-                $username_location = $username;
-        }
+	if(OC_App::isEnabled('multiinstance')) {
+		if(!file_exists($userDirectory)) {
+			OC_Util::setupFS($username);
+		}
+	}
+	$homeExists = file_exists($userDirectory);
 	OC_JSON::success(array("data" =>
 				array(
 					// returns whether the home already existed
 					"homeExists" => $homeExists,
 					"username" => $username,
-					"groups" => OC_Group::getUserGroups( $username ))));
+					"groups" => OC_Group::getUserGroups( $username))));
 } catch (Exception $exception) {
 	OC_JSON::error(array("data" => array( "message" => $exception->getMessage())));
 }
