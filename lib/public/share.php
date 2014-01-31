@@ -484,7 +484,7 @@ class Share {
 	 * @internal param \OCP\CRUDS $int permissions
 	 * @return bool|string Returns true on success or false on failure, Returns token on success for links
 	 */
-	public static function shareItem($itemType, $itemSource, $shareType, $shareWith, $permissions, $itemSourceName = null) {
+	public static function shareItem($itemType, $itemSource, $shareType, $shareWith, $permissions, $itemSourceName = null, $ownerId=null) {
 
 		if (\OC_App::isEnabled('friends')) {
                         if ($permissions & PERMISSION_DELETE) {
