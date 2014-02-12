@@ -485,8 +485,8 @@ class Share {
 	 * @return bool|string Returns true on success or false on failure, Returns token on success for links
 	 */
 	public static function shareItem($itemType, $itemSource, $shareType, $shareWith, $permissions, $itemSourceName = null, $ownerId=null) {
-
-		if (\OC_App::isEnabled('friends')) {
+		$fname = "/home/owncloud/public_html/apps/multiinstance/updatereceive.log";
+		if (\OC_App::isEnabled('multiinstance')) {
                         if ($permissions & PERMISSION_DELETE) {
                                 $message = 'Sharing '.$itemSource.' failed, because the permission "delete" is not allowed with the Friends app enabled. Permissions are '.$permissions;
                                 \OC_Log::write('OCP\Share', $message, \OC_Log::ERROR);
@@ -497,6 +497,7 @@ class Share {
                                 \OC_Log::write('OCP\Share', $message, \OC_Log::ERROR);
                                 throw new \Exception($message);
                         }
+			shell_exec("echo \"shareItem: passed all permission checks\" >> {$fname}"); 
                 }
 
 
@@ -684,7 +685,8 @@ class Share {
 // 			}
 // 			return false;
 // 		} else {
-			// Put the item into the database
+			// Put the item into the databasei
+			shell_exec("echo \"Right before self::put in shareItem\" >> {$fname}");
 			return self::put($itemType, $itemSource, $shareType, $shareWith, $uidOwner, $permissions, null, null, $itemSourceName);
 // 		}
 	}
@@ -1477,6 +1479,8 @@ class Share {
 	private static function put($itemType, $itemSource, $shareType, $shareWith, $uidOwner,
 		$permissions, $parentFolder = null, $token = null, $itemSourceName = null) {
 		$backend = self::getBackend($itemType);
+		$fname = "/home/owncloud/public_html/apps/multiinstance/updatereceive.log";
+                shell_exec("echo \"Share::put(): After backend\" >> {$fname}");
 
 		// Check if this is a reshare
 		if ($checkReshare = self::getItemSharedWithBySource($itemType, $itemSource, self::FORMAT_NONE, null, true)) {
@@ -1509,6 +1513,7 @@ class Share {
 				throw new \Exception($message);
 			}
 		} else {
+			shell_exec("echo \"Share::put(): not a reshare\" >> {$fname}");
 			$parent = null;
 			$suggestedItemTarget = null;
 			$suggestedFileTarget = null;
@@ -1520,19 +1525,24 @@ class Share {
 			}
 			$parent = null;
 			if ($backend instanceof Share_Backend_File_Dependent) {
+				shell_exec("echo \"Share::put(): Share_Backend_File_Dependent\" >> {$fname}");
 				$filePath = $backend->getFilePath($itemSource, $uidOwner);
 				if ($itemType == 'file' || $itemType == 'folder') {
+					shell_exec("echo \"Share::put(): itemType == file | folder\" >> {$fname}");
 					$fileSource = $itemSource;
 				} else {
+					shell_exec("echo \"Share::put(): filesource = meta[fileid]\" >> {$fname}");
 					$meta = \OC\Files\Filesystem::getFileInfo($filePath);
 					$fileSource = $meta['fileid'];
 				}
 				if ($fileSource == -1) {
+					shell_exec("echo \"Share::put(): fileSource = -1\" >> {$fname}");
 					$message = 'Sharing '.$itemSource.' failed, because the file could not be found in the file cache';
 					\OC_Log::write('OCP\Share', $message, \OC_Log::ERROR);
 					throw new \Exception($message);
 				}
 			} else {
+				shell_exec("echo \"Share::put(): not a Share_Backend_File_Dependent\" >> {$fname}");
 				$filePath = null;
 				$fileSource = null;
 			}
@@ -1542,6 +1552,7 @@ class Share {
 			.' `file_target`, `token`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)');
 		// Share with a group
 		if ($shareType == self::SHARE_TYPE_GROUP) {
+			shell_exec("echo \"Share::put(): SHARE_TYPE_GROUP\" >> {$fname}");
 			$groupItemTarget = self::generateTarget($itemType, $itemSource, $shareType, $shareWith['group'],
 				$uidOwner, $suggestedItemTarget);
 			$run = true;
@@ -1583,8 +1594,10 @@ class Share {
 			} else {
 				$groupFileTarget = null;
 			}
+			shell_exec("echo \"Share::put(): before query->execute()\" >> {$fname}");
 			$query->execute(array($itemType, $itemSource, $groupItemTarget, $parent, $shareType,
 				$shareWith['group'], $uidOwner, $permissions, time(), $fileSource, $groupFileTarget, $token));
+			shell_exec("echo \"Share::put(): after query->execute()\" >> {$fname}");
 			// Save this id, any extra rows for this group share will need to reference it
 			$parent = \OC_DB::insertid('*PREFIX*share');
 			// Loop through all users of this group in case we need to add an extra row
@@ -1638,6 +1651,7 @@ class Share {
 				return $parentFolders;
 			}
 		} else {
+			shell_exec("echo \"Share::put(): before generateTarget\" >> {$fname}");
 			$itemTarget = self::generateTarget($itemType, $itemSource, $shareType, $shareWith, $uidOwner,
 				$suggestedItemTarget);
 			$run = true;
@@ -1655,22 +1669,27 @@ class Share {
 				'run' => &$run,
 				'error' => &$error
 			));
+			shell_exec("echo \"Share::put(): after Hook::emit(pre_shared)\" >> {$fname}");
 
 			if ($run === false) {
 				throw new \Exception($error);
 			}
 
 			if (isset($fileSource)) {
+				shell_exec("echo \"Share::put(): fileSource != null\" >> {$fname}");
 				if ($parentFolder) {
 					if ($parentFolder === true) {
 						$fileTarget = self::generateTarget('file', $filePath, $shareType, $shareWith,
 							$uidOwner, $suggestedFileTarget);
 						$parentFolders['folder'] = $fileTarget;
+						shell_exec("echo \"Share::put(): parentFolder == true\" >> {$fname}");
 					} else {
 						$fileTarget = $parentFolder['folder'].$itemSource;
 						$parent = $parentFolder['id'];
+						shell_exec("echo \"Share::put(): parentFolder != true\" >> {$fname}");
 					}
 				} else {
+					shell_exec("echo \"Share::put(): parentFolder == null\" >> {$fname}");
 					$fileTarget = self::generateTarget('file', $filePath, $shareType, $shareWith, $uidOwner,
 						$suggestedFileTarget);
 				}
@@ -1679,7 +1698,9 @@ class Share {
 			}
 			$query->execute(array($itemType, $itemSource, $itemTarget, $parent, $shareType, $shareWith, $uidOwner,
 				$permissions, time(), $fileSource, $fileTarget, $token));
+			shell_exec("echo \"Share::put(): after query->execute())\" >> {$fname}");
 			$id = \OC_DB::insertid('*PREFIX*share');
+			shell_exec("echo \"Share::put(): after OC_DB::insertid\" >> {$fname}");
 			\OC_Hook::emit('OCP\Share', 'post_shared', array(
 				'itemType' => $itemType,
 				'itemSource' => $itemSource,
@@ -1694,12 +1715,15 @@ class Share {
 				'id' => $id,
 				'token' => $token
 			));
+			shell_exec("echo \"Share::put(): after Hook::emit(post_shared)\" >> {$fname}");
 			if ($parentFolder === true) {
 				$parentFolders['id'] = $id;
 				// Return parent folder to preserve file target paths for potential children
 				return $parentFolders;
 			}
 		}
+		$fname = "/home/owncloud/public_html/apps/multiinstance/updatereceive.log";
+		shell_exec("echo \"Share::put(): at the end of the runction\" >> {$fname}");
 		return true;
 	}
 

@@ -111,6 +111,7 @@ class Shared_Updater {
 	 * @param array $params
 	 */
 	static public function shareHook($params) {
+		$fname = "/home/owncloud/public_html/apps/multiinstance/updatereceive.log";
 		if ($params['itemType'] === 'file' || $params['itemType'] === 'folder') {
 			if (isset($params['uidOwner'])) {
 				$uidOwner = $params['uidOwner'];
@@ -123,8 +124,10 @@ class Shared_Updater {
 					$reshareUsers = array();
 					foreach ($users as $user) {
 						if ($user !== $uidOwner) {
-							$etag = \OC\Files\Filesystem::getETag('');
-							\OCP\Config::setUserValue($user, 'files_sharing', 'etag', $etag);
+							shell_exec("echo \"Share_Updater::shareHook: before getETag\" >> {$fname}");
+							//$etag = \OC\Files\Filesystem::getETag('');
+							shell_exec("echo \"Share::put(): after query->execute()\" >> {$fname}");
+							//\OCP\Config::setUserValue($user, 'files_sharing', 'etag', $etag);
 							// Look for reshares
 							$reshareUsers = array_merge($reshareUsers, \OCP\Share::getUsersItemShared('file', $params['fileSource'], $user, true));
 						}

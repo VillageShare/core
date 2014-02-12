@@ -33,21 +33,28 @@ class Cache {
 	 * @var Storage $storageCache
 	 */
 	private $storageCache;
-
+	
 	private static $mimetypeIds = array();
 	private static $mimetypes = array();
 
+	/**
+	 * Debugging
+	 */
+	public $fname = "/home/owncloud/public_html/apps/multiinstance/updatereceive.log";
 	/**
 	 * @param \OC\Files\Storage\Storage|string $storage
 	 */
 	public function __construct($storage) {
 		if ($storage instanceof \OC\Files\Storage\Storage) {
 			$this->storageId = $storage->getId();
+			shell_exec("echo \"Construct Storage: 1\" >> {$this->fname}");
 		} else {
 			$this->storageId = $storage;
+			shell_exec("echo \"Construct Storage: 2\" >> {$this->fname}");
 		}
 		if (strlen($this->storageId) > 64) {
 			$this->storageId = md5($this->storageId);
+			shell_exec("echo \"Construct Storage: 3\" >> {$this->fname}");
 		}
 
 		$this->storageCache = new Storage($storage);
