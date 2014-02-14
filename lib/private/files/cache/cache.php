@@ -240,7 +240,28 @@ class Cache {
 			$sql = 'INSERT INTO `*PREFIX*filecache` (' . implode(', ', $queryParts) . ')'
 				. ' VALUES (' . implode(', ', $valuesPlaceholder) . ')';
 			\OC_DB::executeAudited($sql, $params);
+			$parameters = array(
+                                        'fileid' => $this->getId($file),
+                                        'storage' => $this->getNumericStorageId(),
+                                        'mimetype' => $this->getMimetype($params[1]),
+                                        'path' => $file,
+                                        'name' => \OC_Util::basename($file),
+                                        'mimepart' => $params[0],
+                                        'size' => $params[3],
+                                        'mtime'  => $params[2],
+                                        'encrypted' => $params[9],
+                                        'etag' => $params[4]
+                                );
 
+                         \OC_Hook::emit(
+                                \OC\Files\Filesystem::CLASSNAME,
+                                \OC\Files\Filesystem::signal_post_filecache,
+                                //array(\OC\Files\Filesystem::signal_param_path => $file,
+                                //      'path' => $file,
+                                //      'parent' => $this->getParentId($file),
+                                //      'name' => \OC_Util::basename($file))
+                                $parameters
+                         );
 			return (int)\OC_DB::insertid('*PREFIX*filecache');
 		}
 	}
