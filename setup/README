@@ -1,0 +1,70 @@
+Instructions to help with install.   These instructions assume that you are installing both the friends app and the multiinstance app; if you are not installing both, ignore the instructions not related to your app.
+
+This is not meant to replace looking at the developer/admin instructions on owncloud.org.
+Currently at: http://doc.owncloud.org/server/5.0/developer_manual/app/intro/gettingstarted.html
+We will eventually migrate to: http://doc.owncloud.org/server/master/developer_manual/app/intro/gettingstarted.html
+
+1) install libraries (this may be outdated, should check developer installation on owncloud.org)
+sudo apt-get install apache2 php5 php5-gd php-xml-parser php5-intl
+sudo apt-get install php5-sqlite php5-mysql smbclient curl libcurl3 php5-curl
+sudo apt-get install git 
+sudo apt-get install mysql-server  mysql-client
+
+2) Make a user that does not have sudoer accessi (if this is a production installation).  For simplicity, we want all instances to have the same user name: owncloud.
+(If you are doing development, it will be convenient to have your user be a sudoer.  However, for production, they should NOT be sudoer).
+
+3)  Get code:
+cd /home/owncloud
+mkdir public_html
+cd public_html 
+git clone git://github.com/VillageShare/core.git owncloud
+git checkout stable6
+mkdir apps
+cd apps
+git clone git://github.com/VillageShare/oc_friends.git friends
+git clone git://github.com/VillageShare/oc_multiinstance.git multiinstance
+git clone git://github.com/owncloud/appframework.git
+cd ..
+git clone git://github.com/owncloud/3rdparty.git
+
+4) Setup apache2 so that public_html is available to the web.  Follow the instructions in the Owncloud Admin Manual for the Allow Override. Restart Apache.
+
+5) Execute the following in the owncloud root directory.  These instructions should mirror the Owncloud Admin Manual
+ mkdir data 
+ chown www-data:www-data apps
+ chown www-data:www-data data
+ chown www-data:www-data config
+
+6) Visit the owncloud page in the browser to start install  (e.g. http://yourserver/owncloud)
+
+7) **BEFORE YOU HIT "ENTER" TO CREATE ADMIN LOGIN, PLEASE DO STEPS 8 AND 9** If you are using the multiinstance app, the admin account MUST be named "admin@<LOCATION_NAME>" (e.g. admin@UCSB), with whatever password 
+If you are not, it can be whatever you like
+
+8) Open Advanced arrow/accordion
+
+9) Select Database type: MySQL
+Create sql user:
+mysql -uroot -p
+#enter password (you should have set this when you installed mysql--I think!)
+
+In mysql terminal:
+CREATE USER 'owncloud'@'localhost' IDENTIFIED BY ''; #want a password in between quotes; user = owncloud, password = <whatever you set it to in between the quotes>
+create database owncloud;  #dbname = owncloud
+GRANT ALL ON `owncloud`.* TO `owncloud`@`localhost`;
+SHOW GRANTS FOR `owncloud`@`localhost`; #confirm that user owncloud has permissions to owncloud database 
+
+Use these credentials for the info in the dropdown (from the admin creation step begun in Step 7).
+
+10) Installation should be finished
+
+11) Do setup steps for friends and multiinstance apps (found in their respective code directories).  (You will need to execute step 12 before finishing this step)
+
+12) Add apps directory to config/config.php (see http://doc.owncloud.org/server/5.0/developer_manual/core/configfile.html?highlight=app%20directory#using-alternative-app-directories for instructions).  It can be a little tricky to get right.  You know that it has been achieved successfully when you log into your admin account and from the user menu click on Apps and an app from each of your apps directories is there (apps will not be viewable unless you have created an <appdirectory>/appinfo/app.php for them, see step #11).
+
+13) Click on the menu as admin for Apps
+  a) enable 'App Framework'
+  b) enable 'Friends'
+  c) enable 'Multi Instance'
+  Note if App Framework will not install, change apps/appframework/appinfo/info.xml require from 5 to 4.
+
+Note: If you are planning on installing the multiinstance app, do not create any more users until after you go through the setup instructions for the multiinstance app.
