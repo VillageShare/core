@@ -31,7 +31,10 @@ if (isset($_GET['offset'])) {
 } else {
 	$offset = 0;
 }
-if (isset($_GET['limit'])) {
+if (OC_App::isEnabled('multiinstance')) {
+	$limit = 100;
+}
+else if (isset($_GET['limit'])) {
 	$limit = $_GET['limit'];
 } else {
 	$limit = 10;
