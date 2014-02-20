@@ -1,5 +1,7 @@
 <?php
 
+//Set time limit to 2 hours
+set_time_limit(7200);
 // Firefox and Konqueror tries to download application/json for me.  --Arthur
 OCP\JSON::setContentTypeHeader('text/plain');
 
