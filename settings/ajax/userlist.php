@@ -23,7 +23,11 @@
 OC_JSON::callCheck();
 OC_JSON::checkSubAdminUser();
 if (isset($_GET['offset'])) {
-	$offset = $_GET['offset'];
+	if (OC_App::isEnabled('multiinstance')) {
+		$offset = 0;
+	} else {
+		$offset = $_GET['offset'];
+	}
 } else {
 	$offset = 0;
 }

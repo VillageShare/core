@@ -87,6 +87,13 @@ class Filesystem {
 	const signal_post_create = 'post_create';
 
 	/**
+         * signal emits after filecache is created
+         *
+         * 
+         */
+        const signal_post_filecache = 'post_filecache';
+
+	/**
 	 * signal emits before file/dir copy
 	 *
 	 * @param string $oldpath
