@@ -12,12 +12,47 @@ namespace OC\Files\Cache;
  * Metadata cache for the filesystem
  *
  * don't use this class directly if you need to get metadata, use \OC\Files\Filesystem::getFileInfo instead
+ * Hooks provided:
+ *   post_write(path)
+ *   post_create(path)
+ *   post_delete(path)
+ *   post_rename(oldpath,newpath)
+ *   post_copy(oldpath,newpath)
  */
 class Cache {
 	const NOT_FOUND = 0;
 	const PARTIAL = 1; //only partial data available, file not cached in the database
 	const SHALLOW = 2; //folder in cache, but not all child files are completely scanned
 	const COMPLETE = 3;
+
+	/**
+         * classname which used for hooks handling
+         * used as signalclass in OC_Hooks::emit()
+         */
+        const CLASSNAME = 'Cache';
+
+	 /**
+         * signal emits after filecache is created
+         *
+         * 
+         */
+        const signal_post_create = 'post_create';
+
+
+	/**
+         * signal emits after filecache is created
+         *
+         * 
+         */
+        const signal_post_update = 'post_update';
+
+	/**
+         * signal emits after filecache is created
+         *
+         * 
+         */
+        const signal_post_delete = 'post_delete';
+
 
 	/**
 	 * @var array partial data for the cache
@@ -254,8 +289,8 @@ class Cache {
                                 );
 
                          \OC_Hook::emit(
-                                \OC\Files\Filesystem::CLASSNAME,
-                                \OC\Files\Filesystem::signal_post_filecache,
+                                self::CLASSNAME,
+                                self::signal_post_create,
                                 //array(\OC\Files\Filesystem::signal_param_path => $file,
                                 //      'path' => $file,
                                 //      'parent' => $this->getParentId($file),
@@ -306,6 +341,29 @@ class Cache {
 
 		$sql = 'UPDATE `*PREFIX*filecache` SET ' . implode(' = ?, ', $queryParts) . '=? WHERE `fileid` = ?';
 		\OC_DB::executeAudited($sql, $params);
+
+		$parameters = array(
+                                        'fileid' => $id,
+                                        'storage' => $this->getNumericStorageId(),
+                                        'mimetype' => $this->getMimetype($params[1]),
+                                        'path' => $data['path'],
+                                        'name' => \OC_Util::basename($file),
+                                        'mimepart' => $params[0],
+                                        'size' => $params[3],
+                                        'mtime'  => $params[2],
+                                        'encrypted' => $params[9],
+                                        'etag' => $params[4]
+                                );
+
+                \OC_Hook::emit(
+                                self::CLASSNAME,
+                                self::signal_post_update,
+                                //array(\OC\Files\Filesystem::signal_param_path => $file,
+                                //      'path' => $file,
+                                //      'parent' => $this->getParentId($file),
+                                //      'name' => \OC_Util::basename($file))
+                                $parameters
+                         );
 	}
 
 	/**
@@ -427,7 +485,22 @@ class Cache {
 		
 		$sql = 'DELETE FROM `*PREFIX*filecache` WHERE `fileid` = ?';
 		\OC_DB::executeAudited($sql, array($entry['fileid']));
+		$parameters = array(
+                                        'fileid' => $this->getId($file),
+                                        'storage' => $this->getNumericStorageId(),
+                                        'path' => $file,
+                                        'name' => \OC_Util::basename($file),
+                                );
 
+                 \OC_Hook::emit(
+                                self::CLASSNAME,
+                                self::signal_post_delete,
+                                //array(\OC\Files\Filesystem::signal_param_path => $file,
+                                //      'path' => $file,
+                                //      'parent' => $this->getParentId($file),
+                                //      'name' => \OC_Util::basename($file))
+                                $parameters
+                         );
 		$permissionsCache = new Permissions($this->storageId);
 		$permissionsCache->remove($entry['fileid']);
 	}
