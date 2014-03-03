@@ -51,7 +51,7 @@ if(is_null($uid)) {
 		}
 
 		// Action: REQUEST_GROUP
-                if $action === "REQUEST_GROUP" {
+                /*if $action === "REQUEST_GROUP" {
                         try {
 
 
@@ -60,8 +60,10 @@ if(is_null($uid)) {
                         }
 
                 }
+		*/
 
 		// Action: LEAVE_GROUP
+		/*
                 if $action === "LEAVE_GROUP" {
                         try {
 				if (OC_Group::inGroup($uid, $gid) {
@@ -80,6 +82,7 @@ if(is_null($uid)) {
                         }
 
                 }
+		*/
 
 		/* SubAdmin functions ONLY */
 
@@ -156,7 +159,7 @@ if(is_null($uid)) {
 		}
 		
 		// Action: Delete from group
-                if $action === "GET_GROUP_REQUESTS" {
+                /*if $action === "GET_GROUP_REQUESTS" {
                         try {
 				// TODO: Get group requests given an admin ID
                         } catch(Exception $exception) {
@@ -171,6 +174,7 @@ if(is_null($uid)) {
                                 echo json_encode($params);
                         }
                 }
+		*/
 		
 	}		
 if(count($error) == 0) {
