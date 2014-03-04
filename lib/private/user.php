@@ -349,6 +349,17 @@ class OC_User {
 		return 'href="' . link_to('', 'index.php') . '?logout=true"';
 	}
 
+	public static function deactivateUser() {
+		$uid = self::getUser();
+		OC_Hook::emit('OC_User', 'post_deactivate', array('uid' => $uid));
+		$backend = self::findFirstActiveUsedBackend();
+                if ($backend) {
+                        return $backend->getLogoutAttribute();
+                }
+
+                return 'href="' . link_to('', 'index.php') . '?logout=true"';
+	}
+
 	/**
 	 * @brief Check if the user is an admin user
 	 * @param string $uid uid of the admin

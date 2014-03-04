@@ -3,49 +3,6 @@
  * This file is licensed under the Affero General Public License version 3 or later.
  * See the COPYING-README file.
  */?>
-<style type="text/css">
-.modalDialog {
-        position: fixed;
-        font-family: Arial, Helvetica, sans-serif;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        background: rgba(0,0,0,0.8);
-        z-index: 99999;
-        opacity:0;
-        -webkit-transition: opacity 400ms ease-in;
-        -moz-transition: opacity 400ms ease-in;
-        transition: opacity 400ms ease-in;
-        pointer-events: none;
-}
-
-.modalDialog:target {
-        opacity:1;
-        pointer-events: auto;
-}
-
-.modalDialog > div {
-        width: 400px;
-        position: relative;
-        margin: 10% auto;
-        padding: 5px 20px 13px 20px;
-        border-radius: 10px;
-        background: #fff;
-        background: -moz-linear-gradient(#fff, #999);
-        background: -webkit-linear-gradient(#fff, #999);
-        background: -o-linear-gradient(#fff, #999);
-}
-
-.close {
-        background: #606061;
-        color: #FFFFFF;
-        line-height: 25px;
-        position: absolute;
-}
-
-.close:hover { background: #00d9ff; }
-</style>
 <div class="clientsbox center">
 	<h2><?php p($l->t('Get the apps to sync your files'));?></h2>
 	<a href="<?php p($_['clients']['desktop']); ?>" target="_blank">
@@ -73,28 +30,17 @@
 </div>
 
 <?php
-if(true) {
+if($_['deactivateAccountSupported']) {
 ?>
-<form id="deactivateform" action="deactivateaccount.php">
+<form id="deactivateaccountform">
 	<fieldset class="personalblock">
 		<h2><?php p($l->t('Deactivate Account'));?></h2>
 		<p>By clicking "Deactivate Now," your user account will be deactivated. This means you can no longer share with other users and other users cannot share with you. You will disappear from your friends list of contacts. You can reactivate your account at any time by logging back in with your credentials.</p>
-		<input type="submit" id="deactivate" value="<?php echo $l->t('Deactivate Now');?>" />
+		<!--input type="hidden" id="uname" name="uname" value="<!-?php p($_['uname'])?->" /-->
+		<!--input type="submit" name="deactivateUserSubmit" value="<!-?php echo $l->t('Deactivate Now');?->" /-->
+		<a id="deactivate" <?php print_unescaped(OC_User::deactivateUser()); ?>>Deactivate Now</a>
 	</fieldset>
 </form>
-<div id="deactivateModel" class="modalDialog">
-	<div>
-		<a href="#close" title="Close" class="close">X</a>
-		<br /></br />
-		<h2>Deactivate Account</h2>
-		<p>By clicking "Deactivate Now," your user account will be deactivated. This means you can no longer share with other users and other users cannot share with you. You will disappear from your friends list of contacts. You can reactivate your account at any time by logging back in with your credentials.</p>
-		<form id="modaldeactivate" method="post" action="">
-			<fieldset>
-				<input type="submit" id="deactivate" value="<?php echo $l->t('Deactivate Now');?>" />
-			</fieldset>
-		</form>
-	</div>
-</div>
 <?php
 }
 ?>
