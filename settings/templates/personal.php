@@ -38,7 +38,7 @@ if($_['deactivateAccountSupported']) {
 		<p>By clicking "Deactivate Now," your user account will be deactivated. This means you can no longer share with other users and other users cannot share with you. You will disappear from your friends list of contacts. You can reactivate your account at any time by logging back in with your credentials.</p>
 		<!--input type="hidden" id="uname" name="uname" value="<!-?php p($_['uname'])?->" /-->
 		<!--input type="submit" name="deactivateUserSubmit" value="<!-?php echo $l->t('Deactivate Now');?->" /-->
-		<a id="deactivate" <?php print_unescaped(OC_User::deactivateUser()); ?>>Deactivate Now</a>
+		<a id="deactivate" <?php print_unescaped(OC_User::deactivateUser()); ?>><button type="button">Deactivate Now</button></a>
 	</fieldset>
 </form>
 <?php

@@ -30,44 +30,36 @@ if($uid && $pass1 && $pass2) {
 	$error = null;
 	// Make sure the password is equal
 	if($pass1==$pass2) { 
+		// User was successfully created and their name was modified with a location
+		if (OC_App::isEnabled('multiinstance')) {
+                       	if (\OCA\MultiInstance\Lib\MILocation::uidContainsLocation($uid)){
+                               	$uid_location = $uid;
+                       	}
+                       	else { //Always add for this location 
+                               	$location = \OCP\Config::getAppValue('multiinstance', 'location');
+                               	$uid_location = $uid . "@" . $location;
+                       	}
+                } else {
+                  	$uid_location = $uid;
+                }
 		try {
-           	         OC_User::createUser($uid, $pass1);
-                }
-                catch(Exception $exception) {
-                	$error[] = $exception->getMessage();
-                }
-                if(count($error) == 0) {
-			// User was successfully created and their name was modified with a location
-			if (OC_App::isEnabled('multiinstance')) {
-                        	if (\OCA\MultiInstance\Lib\MILocation::uidContainsLocation($uid)){
-                                	$uid_location = $uid;
-                        	}
-                        	else { //Always add for this location 
-                                	$location = \OCP\Config::getAppValue('multiinstance', 'location');
-                                	$uid_location = $uid . "@" . $location;
-                        	}
-                	}
-                	else {
-                        	$uid_location = $uid;
-                	}
-
-
-                        OC_User::login($uid_location, $pass1);
-
-                }
-		else {
-		?>
-			<html>
-				<body>
-				<?php foreach ($error as $e) {
-					echo $e;
-				} ?>
-				</body>
-			</html>
-		<?php
+                	OC_User::createUser($uid_location, $pass1);
+               	} catch(Exception $exception) {
+                   	     $error[] = $exception->getMessage();
+               	}
+		if (count($error) == 0) {
+                	OC_User::login($uid_location, $pass1);
+		} else {
+			?>
+				<html>
+					<body>
+					<?php foreach ($error as $e) {
+						echo $e;
+					} ?>
+					</body>
+				</html>
+			<?php
 		}
-	
-
 	} else print "passwords do not match";
 } else print "invalid data";
 header("Location: http://"  . \OCP\Config::getAppValue('multiinstance', 'ip') . "/owncloud/index.php");
