@@ -1,15 +1,28 @@
 <?php
 
-require_once "lib/base.php";
 
+//namespace OC\Settings\DeactivateAccount;
 
-	# Check to see if the uname and password works out
-	if (OC_User::checkPassword($uid, $pwd) !== false) {
-		$params = array('uid' => $uid)
-		
-		OC_Hook::emit('DeactivateUser', 'post_deactivate', $params);
+//use OCA\AppFramework\Http\RedirectResponse as RedirectResponse;
+
+//class Controller {
+//        public static function deactivateAccount($args) {
+                // Check if we are an user
+                
+//		\OC_JSON::callCheck();
+//                \OC_JSON::checkLoggedIn();
+
+//                // Manually load apps to ensure hooks work correctly (workaround for issue 1503)
+//                OC_App::loadApps();
+//
+//                $uid = OC_User::getUser();
+
+//		$params = array('uid' => $uid)
+//        	OC_Hook::emit('DeactivateUser', 'post_deactivate', $params);
 		OC_User::logout();
-		header("Location: http://"  . \OCP\Config::getAppValue('multiinstance', 'ip') . "/owncloud/index.php");
-	} 
-
-?>
+       	 	//\OC_User::getLogoutAttribute();
+        	header("Location: http://128.111.52.151/owncloud/?logout=true");
+		//return new RedirectResponse($uri);
+		exit;
+//        }
+//}
