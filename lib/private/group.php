@@ -81,11 +81,10 @@ class OC_Group {
 	 * Tries to create a new group. If the group name already exists, false will
 	 * be returned. Basic checking of Group name
 	 */
-	public static function createGroup($gid) {
-		OC_Hook::emit("OC_Group", "pre_createGroup", array("run" => true, "gid" => $gid));
-
+	public static function createGroup($gid, $no_emit=false) {
+		OC_Hook::emit("OC_Group", "pre_createGroup", array("run" => true, "gid" => $gid, "no_emit" => $no_emit));
 		if (self::getManager()->createGroup($gid)) {
-			OC_Hook::emit("OC_User", "post_createGroup", array("gid" => $gid));
+			OC_Hook::emit("OC_User", "post_createGroup", array("gid" => $gid, "no_emit" => $no_emit));
 			return true;
 		} else {
 			return false;
@@ -99,18 +98,18 @@ class OC_Group {
 	 *
 	 * Deletes a group and removes it from the group_user-table
 	 */
-	public static function deleteGroup($gid) {
+	public static function deleteGroup($gid, $no_emit=false) {
 		// Prevent users from deleting group admin
 		if ($gid == "admin") {
 			return false;
 		}
 
-		OC_Hook::emit("OC_Group", "pre_deleteGroup", array("run" => true, "gid" => $gid));
+		OC_Hook::emit("OC_Group", "pre_deleteGroup", array("run" => true, "gid" => $gid, "no_emit" => $no_emit));
 
 		$group = self::getManager()->get($gid);
 		if ($group) {
 			if ($group->delete()) {
-				OC_Hook::emit("OC_User", "post_deleteGroup", array("gid" => $gid));
+				OC_Hook::emit("OC_User", "post_deleteGroup", array("gid" => $gid, "no_emit" => $no_emit));
 				return true;
 			}
 		}
@@ -142,19 +141,18 @@ class OC_Group {
 	 *
 	 * Adds a user to a group.
 	 */
-	public static function addToGroup($uid, $gid) {
-		$group = self::getManager()->get($gid);
-		$user = self::$userManager->get($uid);
-		if ($group and $user) {
-			OC_Hook::emit("OC_Group", "pre_addToGroup", array("run" => true, "uid" => $uid, "gid" => $gid));
-			$group->addUser($user);
-			OC_Hook::emit("OC_User", "post_addToGroup", array("uid" => $uid, "gid" => $gid));
-			return true;
-		} else {
-			return false;
-		}
-	}
-
+	public static function addToGroup($uid, $gid, $no_emit=false) {
+                $group = self::getManager()->get($gid);
+                $user = self::$userManager->get($uid);
+                if ($group and $user) {
+                        OC_Hook::emit("OC_Group", "pre_addToGroup", array("run" => true, "uid" => $uid, "gid" => $gid, "no_emit" => $no_emit));
+                        $group->addUser($user);
+                        OC_Hook::emit("OC_User", "post_addToGroup", array("uid" => $uid, "gid" => $gid, "no_emit" => $no_emit));
+                        return true;
+                } else {
+                        return false;
+                }
+        }
 	/**
 	 * @brief Removes a user from a group
 	 * @param string $uid Name of the user to remove from group
@@ -163,13 +161,13 @@ class OC_Group {
 	 *
 	 * removes the user from a group.
 	 */
-	public static function removeFromGroup($uid, $gid) {
+	public static function removeFromGroup($uid, $gid, $no_emit=false) {
 		$group = self::getManager()->get($gid);
 		$user = self::$userManager->get($uid);
 		if ($group and $user) {
-			OC_Hook::emit("OC_Group", "pre_removeFromGroup", array("run" => true, "uid" => $uid, "gid" => $gid));
+			OC_Hook::emit("OC_Group", "pre_removeFromGroup", array("run" => true, "uid" => $uid, "gid" => $gid, "no_emit" => $no_emit));
 			$group->removeUser($user);
-			OC_Hook::emit("OC_User", "post_removeFromGroup", array("uid" => $uid, "gid" => $gid));
+			OC_Hook::emit("OC_User", "post_removeFromGroup", array("uid" => $uid, "gid" => $gid, "no_emit" => $no_emit));
 			return true;
 		} else {
 			return false;
