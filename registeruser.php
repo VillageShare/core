@@ -20,7 +20,7 @@ require_once "lib/base.php";
 $uid = $_POST["regname"];
 $pass1 = $_POST["regpass1"];
 $pass2 = $_POST["regpass2"];
-
+shell_exec("echo ${uid} >> /home/owncloud/public_html/owncloud/register.log");
 if(is_null($uid)) {
 	echo "$uid is null";
 }
@@ -33,13 +33,16 @@ if($uid && $pass1 && $pass2) {
 		// User was successfully created and their name was modified with a location
 		if (OC_App::isEnabled('multiinstance')) {
                        	if (\OCA\MultiInstance\Lib\MILocation::uidContainsLocation($uid)){
+				shell_exec("echo \"MultiInstance enabled; UID includes location\" >> /home/owncloud/public_html/owncloud/register.log");
                                	$uid_location = $uid;
                        	}
                        	else { //Always add for this location 
+				shell_exec("echo \"MultiInstance enabled; UID DOES NOT include location\" >> /home/owncloud/public_html/owncloud/register.log");
                                	$location = \OCP\Config::getAppValue('multiinstance', 'location');
                                	$uid_location = $uid . "@" . $location;
                        	}
                 } else {
+			shell_exec("echo \"MultiInstance not enabled.\" >> /home/owncloud/public_html/owncloud/register.log");
                   	$uid_location = $uid;
                 }
 		try {
