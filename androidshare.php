@@ -9,17 +9,17 @@ require_once "lib/base.php";
 
 $uid_owner = $_POST["name_location"];
 
-/*
+
 //decoding json_string from the raw input string, POST won't populate
 $var_dump = json_decode(file_get_contents("php://input"));
-
+$uid_owner = $var_dump->uidOwner;
 $itemType = $var_dump->itemType;	//file or folder
 $itemSource = $var_dump->itemSource;	//path to the file
 $shareType = $var_dump->shareType;	//group, user or link
 $toShareWith = $var_dump->toShareWith; 	//array of with whom to share
-$uid_owner = $var_dump->uidOwner; 	//who is owner
+//$uid_owner = $var_dump->uidOwner; 	//who is owner
 $permissions = OCP\PERMISSION_READ;	//shared files can only be read by users
-*/
+
 
 $retval = array();
 
