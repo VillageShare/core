@@ -113,7 +113,7 @@
 		</fieldset>
 </form>
         <br />
-        <a href="#openModal"><button type="button">New User</button></a>
+        <!--a href="#openModal"><button type="button">New User</button></a-->
 	<div id="openModal" class="modalDialog">
 		<div>
 			<a href="#close" title="Close" class="close">X</a>
