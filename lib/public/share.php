@@ -531,8 +531,8 @@ class Share {
 				\OC_Log::write('OCP\Share', $message, \OC_Log::ERROR);
 				throw new \Exception($message);
 			}
-			  if (\OC_App::isEnabled('friends') && !\OCA\Friends\Lib\Friends::areFriends($uidOwner, $shareWith)) {
-                                $message = 'Sharing '.$itemSource.' failed, because the user '.$shareWith.' is not friends with the item owner';
+			  if (\OC_App::isEnabled('friends') && !\OCA\Friends\Lib\Friends::areFriends($shareWith, $uidOwner)) {
+                                $message = 'Sharing '.$itemSource.' failed, because the user '.$shareWith.' is not friends with the item owner'.$uidOwner;
                                 \OC_Log::write('OCP\Share', $message, \OC_Log::ERROR);
                                 throw new \Exception($message);
                         }

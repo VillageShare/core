@@ -6,54 +6,73 @@ require_once "lib/base.php";
 $operation = $_POST["operation"];
 $groupid = $_POST["GID"];
 $userid = $_POST["UID"];
-
+$subid = $_POST["SID"];
 switch($operation)
 {
-        case 0:{
-                 error_log($userid);
+        case 0:{ // Create Group
+                 #error_log($userid);
                  $retval = OC_Group::createGroup($groupid,$userid);
-                 error_log($userid);
+                # error_log($userid);
                  $params = array(
                         'createGroup' => $retval
                  );
-                error_log("back ".$retval);
+		$retval = OC_SubAdmin::createSubAdmin($userid, $groupid);
+		#error_log($userid)
+		$params = array(
+                        'addAdmin' => $retval
+                 );
+		$retval = OC_Group::addToGroup($userid,$groupid);
+                #error_log($userid.' '.$groupid.' '.$subid);
+                $params = array(
+                            'addToGroup' => $retval
+                );
                 echo json_encode($params);
                 }break;
-        case 1:{
+        case 1:{ // Delete group
 		$sql = 'SELECT * FROM `oc_group_admin` WHERE `gid` = ? AND `uid` = ?';
-		$params = array(groupid, userid);
+		$params = array($groupid, $userid);
 		$retval = array();
 		$retval = OC_DB::executeAudited(OC_DB::prepare($sql),$params);
-		if ($retval !== null) {
-                	$retval = OC_Group::deleteGroup($groupid);
-                	$params = array(
-                        	'deleteGroup'=>$retval
-                	);
-                	echo json_encode($params);
+		$result = $retval->fetchRow();
+		if ($result != null) {
+					$retval = OC_Group::deleteGroup($groupid);
+                        		$params = array(
+		                                'deleteGroup'=>$retval
+                		        );
+                        		echo json_encode($params);
 		}
                 }break;
-        case 2: {
-                $retval = OC_Group::addToGroup($userid,$groupid);
-                error_log($userid.' '.$groupid);
-                $params = array(
-                        'addToGroup' => $retval
-                 );
-                echo json_encode($params);
-                }break;
-        case 3: {
+        case 2: { // Add to group
 		$sql = 'SELECT * FROM `oc_group_admin` WHERE `gid` = ? AND `uid` = ?';
-                $params = array(groupid, userid);
+                $params = array($groupid, $userid);
                 $retval = array();
                 $retval = OC_DB::executeAudited(OC_DB::prepare($sql),$params);
-		if ($retval !== null) {
-                	$retval = OC_Group::removeFromGroup($userid,$groupid);
-                	$params = array(
-                        	'removeFromGroups'=> $retval
-                	);
-                	echo json_encode($params);
+		$result = $retval->fetchRow();
+		if ($result != null) {
+					$retval = OC_Group::addToGroup($subid,$groupid);
+                			#error_log($userid.' '.$groupid.' '.$subid);
+		                	$params = array(
+                		        	'addToGroup' => $retval
+		                	);
+                			echo json_encode($params);
 		}
                 }break;
-        case 4: {
+        case 3: { // Opt out
+		$sql = 'SELECT * FROM `oc_group_admin` WHERE `gid` = ? AND `uid` = ?';
+                $params = array($groupid, $userid);
+                $retval = array();
+                $retval = OC_DB::executeAudited(OC_DB::prepare($sql),$params);
+		$result = $retval->fetchRow();
+		if ($result != null || $userid == $subid) {
+
+		                	$retval = OC_Group::removeFromGroup($subid,$groupid);
+                			$params = array(
+                        			'removeFromGroups'=> $retval
+		                	);
+                			echo json_encode($params);
+		}
+                }break;
+        case 4: { // Get groups
                 $retval = OC_Group::getuserGroups($userid);
                 $params = array(
                         'getUserGroups'=>$retval
@@ -63,7 +82,7 @@ switch($operation)
         case 5: {
                 $retval = OC_Group::usersinGroup($groupid);
                 $params = array(
-                        'usersinGrup'=>$retval
+                        'usersinGroup'=>$retval
                 );
                 echo json_encode($params);
                 }break;

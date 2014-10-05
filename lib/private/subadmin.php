@@ -39,7 +39,7 @@ class OC_SubAdmin{
 	public static function createSubAdmin($uid, $gid) {
 		$stmt = OC_DB::prepare('INSERT INTO `*PREFIX*group_admin` (`gid`,`uid`) VALUES(?,?)');
 		$result = $stmt->execute(array($gid, $uid));
-		OC_Hook::emit( "OC_SubAdmin", "post_createSubAdmin", array( "gid" => $gid ));
+		OC_Hook::emit( "OC_SubAdmin", "post_createSubAdmin", array( "gid" => $gid , "uid" => $uid));
 		return true;
 	}
 
